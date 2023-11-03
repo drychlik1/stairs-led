@@ -6,7 +6,7 @@
 # echo_pin - pin odbierający 
 
 sensor:
-	- platform: ultrasonic
+    - platform: ultrasonic
       trigger_pin: GPIO8
       echo_pin: GPIO10
       name: "Odległość"
