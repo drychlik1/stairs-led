@@ -1,1 +1,18 @@
-u
+### Konfiguracja czujnika ultradźwiękowego
+# TYP | SRC-05s 5V
+# Maks. odległość | 4m
+# Kąt łapania | 15 stopni 
+# trigger_pin - pin nadający 
+# echo_pin - pin odbierający 
+
+sensor:
+	- platform: ultrasonic
+      trigger_pin: GPIO8
+      echo_pin: GPIO10
+      name: "Odległość"
+      update_interval: 5s
+      timeout: 4m
+      pulse_time: 10us
+      id: sensor1
+      filters:
+        - filter_out: nan
