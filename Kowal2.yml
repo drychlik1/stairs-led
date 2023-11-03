@@ -38,14 +38,14 @@
 
 # CH9102 DRIVER - T-U2T #
 
-# Ustawienia gÅÃ³wne
+# Ustawienia główny
 esphome:
   name: led1
-  friendly_name: ÅwiatÅa schodowe
+  friendly_name: schodowe
   comment: Schody | LED | KOWAL | DR 2023
   project:
     name: "led_1.dr"
-    version: "4.0.1"
+    version: "5.0.1"
     minimum_version: 1.8
   on_boot:
     priority: 600
