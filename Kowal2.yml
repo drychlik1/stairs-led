@@ -1,7 +1,4 @@
-
-
-
-# RELAY PIN #
+# Przekaźnik (K) na pinie GPIO
 # ---K1-> GPIO33 --- > WARIANT WYMIENNY GPIO33 == TOUCH[[PIN]]
 # ---K2-> GPIO32
 # ---K3-> GPIO13
