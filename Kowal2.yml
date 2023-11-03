@@ -1,0 +1,363 @@
+# Docs from producer: https://github.com/Xinyuan-LilyGO/LilyGo-T-Relay/blob/main/docs/RELAY_ESP32.md
+# Pinout - https://cdn.shopify.com/s/files/1/0617/7190/7253/products/T-Relay8.jpg?v=1664013500
+# Driver for USB: https://1github.com/Xinyuan-LilyGO/CH9102_Mac_Driver
+# Help from: https://community.lilygo.cc/
+# Touchsensor library: https://github.com/espressif/esp-iot-solution/blob/release/v1.1/documents/touch_pad_solution/touch_sensor_design_en.md
+
+# RELAY PIN #
+# ---K1-> GPIO33 --- > WARIANT WYMIENNY GPIO33 == TOUCH[[PIN]]
+# ---K2-> GPIO32
+# ---K3-> GPIO13
+# ---K4-> GPIO12 --- > WARIANT WYMIENNY (X
+# ---K5-> GPIO21
+# ---K6-> GPIO19
+# ---K7-> GPIO18
+# ---K8-> GPIO5
+
+# REPLACE RELAY PIN == V2
+# ---K1 -- > GPIO33 (T)
+
+# FREE PIN #
+# - GPIO22 | GPIO26 | GPIO34 | GPIO39 |NC|NC| GPIO35 | GPIO15 | GPIO14 | GND | GND|
+# - GPIO23 | GPIO27 |  GND   | GPIO36 |  NC |   NC   | GPIO04 | GPIO02 | 3V3 | 3V3| 
+
+# TOUCH PIN #
+# - GPIO4 - GPIO0 - GPIO2 - GPIO15 - GPIO 32 
+# - GPIO33 - GPIO27 - GPIO14 - GPIO12 - GPIO 13
+
+##### KANAÅY DOTYKU
+# T(X) - pin for capactive sensor - t+1=x
+## //////////22222222 T(x) == S(x)
+###  T0 = GPIO4
+### - T1 = GPIO0
+### -- T2 = GPIO2
+## -- T3 = MTDO
+## -- T4 = MTCK
+## -- T5 = MTDI
+## -- T6 = MTMS
+### -- T7 = GPIO27
+## --- T8 = 32K_XN
+## --- T9 = 32K_XP
+
+# LED INDICATOR #
+# -- GPIO25x
+
+# CH9102 DRIVER - T-U2T #
+
+# Ustawienia gÅÃ³wne
+esphome:
+  name: led1
+  friendly_name: ÅwiatÅa schodowe
+  comment: Schody | LED | KOWAL | DR 2023
+  project:
+    name: "led_1.dr"
+    version: "4.0.1"
+    minimum_version: 1.8
+  on_boot:
+    priority: 600
+    then:
+      - switch.turn_off: r1
+      - switch.turn_off: r2
+      - switch.turn_off: r3
+      - switch.turn_off: r4
+      - switch.turn_off: r5
+
+# BIBLIOTEKI
+## Folder obejmujÄcy: src/main.cpp - ZOBACZ uwierzytelnienie.
+#icludes: 
+#  - scriptGORA.h
+#  - scriptDOL.h
+#  - bootloaderESP-Tx.h
+#  - configESP-T.h
+# Ustawienia pÅyty
+esp32:
+  board: esp32dev
+
+# Dashboard dla ESP
+web_server:
+  port: 80
+
+# Aktualizacja bezprzewodowa 
+ota:
+
+# Terminal
+logger:
+
+# Konfiguracja API
+api:
+
+# Ustawienia WiFI
+wifi:
+  ssid: Kowal
+  password: kowalski
+  manual_ip:
+   static_ip: 192.168.100.105
+   gateway: 192.168.100.1
+   subnet: 255.255.255.0
+   dns1: 8.8.8.8
+   dns2: 8.8.4.4
+  fast_connect: true
+  id: wifi_connect
+  ap:
+    ssid: "Schody-led-tryb-awaryjny"
+    password: "podgajE!"
+  domain: .kowal
+
+# ProtokÃ³Å IMPROV poprzez port SERIAL
+improv_serial:
+
+# Portal przechwytujÄcy
+captive_portal:
+
+# UsÅuga mdns do rozgÅaszania
+mdns:
+  disabled: false
+  services:
+    - service: "_custom_service"
+      protocol: "_tcp"
+      port: 8080
+      txt:
+        txt_key_1: led_schody_01
+
+# Komponent sÅoÅca
+sun:
+  latitude: 53.422265
+  longitude: 16.815579
+  on_sunrise:
+    - then:
+        - logger.log: DzieÅ dobry! WÅaÅnie rozpoczÄÅ siÄ wschÃ³d sÅoÅca.
+    # Ponizsza wiadomoÅÄ wyÅwietli siÄ po 5 miunutach
+    - elevation: 5Â°
+      then:
+        - logger.log: Czy juz wstaÅeÅ?
+  on_sunset:
+    - then:
+        - logger.log: Dobry wieczÃ³r! Informuje, Å¼e nastÄpiÅ zachÃ³d sÅoÅca.
+
+# Skonfigurowanie czasu z sntp
+time:
+  - platform: sntp
+    timezone: CET-1CEST,M3.5.0,M10.5.0/3
+    id: sntp_time
+    update_interval: 1h
+    servers:
+    - 0.pool.ntp.org
+    - 1.pool.ntp.org
+    - 2.pool.ntp.org
+
+# Skrypt dla przycisku od doÅu
+script:
+  - id: dol_1
+    mode: single
+    then:
+      - if:
+          condition:
+            - binary_sensor.is_on: gorny1
+            - script.is_running: gora_1
+          then:
+            - script.stop: dol_1
+          else:
+            - switch.toggle: r1
+            - delay: 1s
+            - switch.toggle: r2
+            - delay: 1250ms
+            - switch.toggle: r3
+            - delay: 1250ms
+            - switch.toggle: r4
+            - delay: 1250ms
+            - switch.toggle: r5
+            - if:
+                condition:
+                - switch.is_on: r1
+                - switch.is_on: r2
+                - switch.is_on: r3
+                - switch.is_on: r4
+                - switch.is_on: r5
+                then:
+                  - logger.log: "Melduje, ze wÅÄczono poprawnie wszystkie ÅwiatÅa"
+            - delay: 20s
+            - switch.turn_off: r1
+            - switch.turn_off: r2
+            - switch.turn_off: r3
+            - switch.turn_off: r4
+            - switch.turn_off: r5
+            - logger.log: "WyÅÄczono wszystkie ÅwiatÅa"
+  - id: gora_1
+    mode: single
+    then:
+      - if:
+          condition:
+              - binary_sensor.is_on: dolny1
+              - script.is_running: dol_1
+          then:
+            - script.stop: gora_1
+          else:
+            - switch.toggle: r5
+            - delay: 1250ms
+            - switch.toggle: r4
+            - delay: 1250ms
+            - switch.toggle: r3
+            - delay: 1250ms
+            - switch.toggle: r2
+            - delay: 1250ms
+            - switch.toggle: r1
+            - if:
+                condition:
+                  - switch.is_on: r5
+                  - switch.is_on: r4
+                  - switch.is_on: r3
+                  - switch.is_on: r2
+                  - switch.is_on: r1
+                then:
+                  - logger.log: "Melduje, ze wÅÄczono poprawnie wszystkie ÅwiatÅa"
+            - delay: 20s
+            - switch.turn_off: r5
+            - switch.turn_off: r4
+            - switch.turn_off: r3
+            - switch.turn_off: r2
+            - switch.turn_off: r1
+            - logger.log: "WyÅÄczono wszystkie ÅwiatÅa"
+
+# Informacje z czujnikÃ³w
+text_sensor:
+
+# WschÃ³d sÅoÅca
+  - platform: sun
+    name: WschÃ³d sÅoÅca
+    id: wschod
+    type: sunrise
+    disabled_by_default: false
+    elevation: -0.83333
+    format: '%X'
+    update_interval: 1h
+    icon: mdi:weather-sunset-up
+
+# ZachÃ³d sÅoÅca
+  - platform: sun
+    name: ZachÃ³d sÅoÅca
+    id: zachod
+    type: sunset
+    disabled_by_default: false
+    elevation: -0.83333
+    format: '%X'
+    update_interval: 1h
+    icon: mdi:weather-sunset-down
+
+# Informacje o wersji ESP
+#  - platform: version
+ #   name: "Wersja oprogramowania"
+
+# Informacje o WiFi
+  - platform: wifi_info
+    ssid:
+      name: Nazwa podpiÄtej sieci
+      id: ssid
+
+# WyjÅcie dla przekaÅºnika 220/230v
+switch:
+
+# K1 Dla ÅwiatÅa led nr 1
+  - platform: gpio
+    pin: GPIO33
+    id: r1
+    name: "Åwiato nr 1"
+
+# K2 Dla ÅwiatÅa led nr 2
+  - platform: gpio
+    pin: GPIO32
+    id: r2
+    name: "ÅwiatÅo nr 2"
+
+# K3 Dla ÅwiatÅa led nr 3
+  - platform: gpio
+    pin: GPIO13
+    id: r3
+    name: "ÅwiatÅo nr 3"
+
+# K4 Dla ÅwiatÅa led nr 4
+  - platform: gpio
+    pin: GPIO12
+    id: r4
+    name: "ÅwiatÅo nr 4"
+
+# K5 Dla ÅwiatÅa nr 5
+  - platform: gpio
+    pin: GPIO21
+    name: "ÅwiatÅo nr 5"
+    id: r5
+
+# K6 PrzekaÅºnik do dyspozycji
+  - platform: gpio
+    pin: GPIO19
+    name: "Gniazdo nr 1"
+    id: r6
+
+# K7 PrzekaÅºnik do dyspozycji
+  - platform: gpio
+    pin: GPIO18
+    name: "Gniazdo nr 2"
+    id: r7
+
+# K8 PrzekaÅºnik do dyspozycji
+  - platform: gpio
+    pin: GPIO5
+    name: "Gniazdo nr 3"
+    id: r8
+
+# Konfiguracja dla bazy przycisku analogowego 
+esp32_touch:
+  setup_mode: True
+  iir_filter: 10ms
+  id: touching
+  sleep_duration: 0s
+  measurement_duration: 8192us
+  low_voltage_reference: 0.5V  # NapÄcie odniesienia: 0.5V | 0.6V | 0.7V | 0.8V - start 0.5V.
+  high_voltage_reference: 2.4V # NapiÄcie odniesienia wysokie: 2.4V | 2.5V | 2.6V | 2.7V - start 2.7V
+  voltage_attenuation: 0V
+  iir_filter: 10ms
+  filter_mode: IIR_4
+  debounce_count: 2
+  noise_threshold: 3
+  jitter_step: IIR_4
+  denoise_grade: BIT4
+  denoise_cap_level: L4
+  waterproof_gruard_ring: 
+  waterproof_shield_driver: L0
+
+sensor:
+  - platform: adc
+    pin: A0 # Must check pin in measrument voltage 0.0V or 1.0V - but we have 
+    id: analog1
+
+
+# OgÃ³lna klasa dla przycisku
+binary_sensor:
+
+# DÃÅ PRZEÅÄCZNIK OD DOÅU
+  - platform: esp32_touch
+    name: "WÅÄcznik dolny"
+    pin: GPIO27
+    id: dolny1
+    wakeup_threshold: 0
+    disabled_by_default: false
+    threshold: 500
+    filters:
+      - delayed_off: 24s
+    on_press:
+      then:
+        - script.execute: dol_1
+# WÅÄcznik na gÃ³rze
+  - platform: esp32_touch
+    name: "WÅÄcznik gÃ³rny"
+    pin: GPIO15
+    id: gorny1
+    wakeup_threshold: 0
+    disabled_by_default: false
+    threshold: 500
+    filters:
+      - delayed_off: 24s
+    on_press:
+      then:
+       - script.execute: gora_1
+    
+    
